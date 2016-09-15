@@ -1,0 +1,7 @@
+<?php $messages = $this->getAttribute('messages'); ?>
+
+<?php foreach($messages as $key => $value): ?>
+    <ul>
+        <li><?php echo $value[0]; ?></li>
+    </ul>
+<?php endforeach; ?>

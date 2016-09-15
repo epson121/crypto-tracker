@@ -1,0 +1,14 @@
+{
+	"require": {
+		"monolog/monolog": "1.0.*",
+		"slim/slim": "3.5.*",
+		"oscarotero/psr7-middlewares": "^3.16",
+		"slim/php-view": "^2.1",
+		"slim/flash": "^0.1.0",
+		"illuminate/database": "~5.1",
+		"slim/pdo": "~1.9"
+	},
+	"autoload": {
+		"psr-4": { "": "src/" }
+	}
+}

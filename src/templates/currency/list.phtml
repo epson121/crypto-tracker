@@ -1,0 +1,12 @@
+<?php $items = $this->getAttribute('items'); ?>
+
+<?php if ($items): ?>
+    <h1>List</h1>
+    <ul>
+        <?php foreach ($items as $item): ?>
+            <li>
+                <a href="/currency/view/<?php echo htmlentities($item['id']); ?>" ><?php echo $item['code']; ?></a>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php endif; ?>

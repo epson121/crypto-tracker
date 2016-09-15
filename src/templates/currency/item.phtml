@@ -1,0 +1,95 @@
+<?php echo $this->fetch('head.phtml'); ?>
+<?php echo $this->fetch('header.phtml'); ?>
+<?php
+    $item = $this->getAttribute('item');
+    $txns = $this->getAttribute('txns');
+    $ticker = $this->getAttribute('ticker');
+    /** @var $helper \Helpers\Data */
+    $helper = $this->getAttribute('helper');
+?>
+
+<div class="container">
+    <?php if ($item): ?>
+        <h3><?php echo $item['name']; ?></h3>
+        <?php echo $this->fetch('messages.phtml'); ?>
+        <?php if (count($txns)): ?>
+            <?php $totals = $helper->getTxnsTotal($txns); ?>
+            <table class="table table-hover">
+                <thead>
+                    <tr class="info">
+                        <th></th>
+                        <th>Bought</th>
+                        <th>Spent</th>
+                        <th>Price per BTC</th>
+                        <th>Created At</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($txns as $tx): ?>
+                        <tr>
+                            <?php $pricePerBtc = $helper->calculatePricePerBtc($tx['spent'], $tx['bought']); ?>
+                            <td></td>
+                            <td><?php echo $tx['bought'];?></td>
+                            <td><?php echo $helper->formatCurrency($tx['spent']);?></td>
+                            <td><?php echo $helper->formatCurrency($pricePerBtc); ?></td>
+                            <td><?php echo $tx['created_at'];?></td>
+                            <td>
+                                <a href="/currency/txn/edit/<?php echo $tx['id']; ?>">Edit</a>
+                            </td>
+                            <td>
+                                <a href="/currency/txn/delete/<?php echo $tx['id']; ?>/<?php echo $item['id']; ?>">Delete</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                        <tr class="info">
+                            <td>Total</td>
+                            <td><?php echo $totals['total_bought']; ?></td>
+                            <td><?php echo $helper->formatCurrency($totals['total_spent']); ?></td>
+                            <td><?php echo $helper->formatCurrency($totals['total_price_per_btc']); ?></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="info">
+                            <td>Profit</td>
+                            <?php $spent = $totals['total_bought'] * $totals['total_price_per_btc']; ?>
+                            <?php $current = $totals['total_bought'] * $ticker->price; ?>
+                            <td><?php echo $helper->formatCurrency($current - $spent); ?></td>
+                        </tr>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <span>No transactions.</span>
+        <?php endif; ?>
+        <div class="row">
+            <div class="col-md-6">
+                <form action="/currency/add/transaction" method="post" >
+                    <input name="id" type="hidden" value="<?php echo $item['id']; ?>" />
+                    <div class="form-group">
+                        <label for="bought">Bought</label>
+                        <input id="bought" class="form-control" name="bought" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="spent">Spent ($)</label>
+                        <input id="spent" class="form-control" name="spent" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-default">Add</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <p class="text-center lead">Current price:</p>
+                <p class="text-center lead2"><?php echo $helper->formatCurrency($ticker->price); ?></p>
+            </div>
+        </div>
+    <?php else: ?>
+        <span>No items.</span>
+    <?php endif; ?>
+    <a href="/currency">Back</a>
+</div>s
+s
+.sql
+<?php echo $this->fetch('footer.phtml'); ?>
