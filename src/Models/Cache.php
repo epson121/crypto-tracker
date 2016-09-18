@@ -29,8 +29,10 @@ class Cache
     public function saveCache($file, $content) {
         $fileName = $this->getFilename($file);
         $fp = fopen($fileName, 'w');
-        fwrite($fp, serialize($content));
-        fclose($fp);
+        if ($fp) {
+            fwrite($fp, serialize($content));
+            fclose($fp);
+        }
     }
 
     public function getFilename($file) {
