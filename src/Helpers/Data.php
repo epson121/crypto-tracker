@@ -16,26 +16,41 @@ class Data
         return $numberFormatter->format($value);
     }
 
+    public function formatDate($date) {
+        return date('Y-m-d', strtotime($date));
+    }
+
     /**
      * @param $txns
      */
     public function getTxnsTotal($txns) {
 
-        $count = count($txns);
-        $totalBought = 0;
-        $totalSpent = 0;
-        $totalPricePerBtc = 0;
+        $countBought = 0;
+        $countSold = 0;
+        $totalAmount = 0;
+        $totalValue = 0;
+        $totalPricePerBtcBought = 0;
+        $totalPricePerBtcSold = 0;
 
         foreach ($txns as $txn) {
-            $totalBought += $txn['bought'];
-            $totalSpent += $txn['spent'];
-            $totalPricePerBtc += $this->calculatePricePerBtc($txn['spent'], $txn['bought']);
+            if ($txn['type'] == 1) {
+                $totalAmount += $txn['amount'];
+                $totalValue -= $txn['value'];
+                $totalPricePerBtcBought += $this->calculatePricePerBtc($txn['amount'], $txn['value']);
+                $countBought += 1;
+            } else {
+                $totalAmount -= $txn['amount'];
+                $totalValue += $txn['value'];
+                $totalPricePerBtcSold += $this->calculatePricePerBtc($txn['amount'], $txn['value']);
+                $countSold += 1;
+            }
         }
 
         return [
-            'total_bought'  => $totalBought,
-            'total_spent'   => $totalSpent,
-            'total_price_per_btc'   => (float) ($totalPricePerBtc / $count)
+            'total_amount'  => $totalAmount,
+            'total_value'   => $totalValue,
+            'total_price_per_btc_bought'   => (float) ($totalPricePerBtcBought / $countBought),
+            'total_price_per_btc_sold'   => (float) ($totalPricePerBtcSold / $countSold)
         ];
     }
 

@@ -1,14 +1,36 @@
+<?php echo $this->fetch('head.phtml'); ?>
+<?php echo $this->fetch('header.phtml'); ?>
+
 <?php $txn = $this->getAttribute('txn'); ?>
 
 <form action="/currency/txn/update/<?php echo $txn['id']; ?>/<?php echo $txn['currency_id']; ?>" method="post">
     <input name="id" type="hidden" value="<?php echo $txn['id']; ?>" />
 
-    <label>Bought</label>
-    <input name="bought" type="text" value="<?php echo $txn['bought']; ?>"/>
+    <div class="form-group">
+        <label for="txn_type">Type</label>
+        <select id="txn_type" name="txn_type">
+            <option value="1">Bought</option>
+            <option value="2">Sold</option>
+        </select>
+    </div>
 
-    <label>Spent ($)</label>
-    <input name="spent" type="text" value="<?php echo $txn['spent']; ?>"/>
+    <label for="amount">Bought</label>
+    <input id="amount" name="amount" type="text" value="<?php echo $txn['amount']; ?>"/>
+
+    <label for="value">Spent ($)</label>
+    <input id="value" name="value" type="text" value="<?php echo $txn['value']; ?>"/>
+
+    <label for="txn_date">Date ($)</label>
+    <input id="txn_date" name="txn_date" type="text" value="<?php echo $txn['date']; ?>"/>
 
     <button>Update</button>
 
 </form>
+
+<script>
+    $( function() {
+        $( "#txn_date" ).datepicker();
+    } );
+</script>
+
+<?php echo $this->fetch('footer.phtml'); ?>

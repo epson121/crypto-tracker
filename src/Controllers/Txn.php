@@ -8,6 +8,53 @@ use Slim\Http\Response;
 class Txn extends Base
 {
 
+    public function add(Request $request, Response $response, $args) {
+        $params = $request->getParams();
+        if (!$params['id']) {
+            $this->_flash->addMessage('id','Id is missing');
+        }
+
+        $amount = (float) $params['amount'];
+        $value = (float) $params['value'];
+
+        if (!$params['txn_type']) {
+            $this->_flash->addMessage('txn_type', 'Transaction type is missing');
+        }
+
+        if ($amount == null || !$this->isNumber($amount) || !$amount > 0) {
+            $this->_flash->addMessage('bought', 'How much did you buy?');
+        }
+
+        if ($value == null || !$this->isNumber($value) || !$value > 0) {
+            $this->_flash->addMessage('spent', 'How much did you spend?');
+        }
+
+        if (!$params['txn_date']) {
+            $this->_flash->addMessage('txn_date', 'What was the date?');
+        }
+
+        if (!count($this->_flash->getMessages())) {
+            $nowDate = date('Y-m-d H:i:s');
+            $date = date('Y-m-d H:i:s', strtotime($params['txn_date']));
+            $data = [
+                'type'          => $params['txn_type'],
+                'currency_id'   => $params['id'],
+                'amount'        => $params['amount'],
+                'value'         => $params['value'],
+                'date'          => $params['txn_date'],
+                'created_at'    => $nowDate,
+                'updated_at'    => $nowDate
+            ];
+
+            $res = $this->getModel('\Models\Txn')->save($data);
+
+            if ($res) {
+                $this->_flash->addMessage('success', 'Transaction saved!');
+            }
+        }
+        return $response->withRedirect('/currency/view/' . $params['id']);
+    }
+
     public function edit(Request $request, Response $response, $args) {
         $id = $args['id'];
         if (!$id) {
@@ -39,10 +86,9 @@ class Txn extends Base
     public function editPost(Request $request, Response $response, $args) {
         $cid = $args['cid'];
         $params = $request->getParams();
-        $messages = [];
 
-        $bought = (float) $params['bought'];
-        $spent = (float) $params['spent'];
+        $amount = (float) $params['amount'];
+        $value = (float) $params['value'];
 
         if (!$args['cid']) {
             $this->_flash->addMessage('id','Id is missing');
@@ -52,20 +98,32 @@ class Txn extends Base
             $this->_flash->addMessage('id','Id is missing');
         }
 
-        if ($bought == null || !$this->isNumber($bought) || !$bought > 0) {
+        if (!$params['txn_type']) {
+            $this->_flash->addMessage('txn_type', 'Transaction type is missing');
+        }
+
+        if ($amount == null || !$this->isNumber($amount) || !$amount > 0) {
             $this->_flash->addMessage('bought', 'How much did you buy?');
         }
 
-        if ($spent == null || !$this->isNumber($spent) || !$spent > 0) {
+        if ($value == null || !$this->isNumber($value) || !$value > 0) {
             $this->_flash->addMessage('spent', 'How much did you spend?');
         }
 
+        if (!$params['txn_date']) {
+            $this->_flash->addMessage('txn_date', 'What was the date?');
+        }
+
+
         if (!count($this->_flash->getMessages())) {
-            $date = date('Y-m-d H:i:s');
+            $nowDate = date('Y-m-d H:i:s');
+            $date = date('Y-m-d H:i:s', strtotime($params['txn_date']));
             $data = [
-                'bought'        => $params['bought'],
-                'spent'         => $params['spent'],
-                'updated_at'    => $date
+                'type'          => $params['txn_type'],
+                'amount'        => $params['amount'],
+                'value'         => $params['value'],
+                'date'          => $date,
+                'updated_at'    => $nowDate
             ];
 
             $cond = [

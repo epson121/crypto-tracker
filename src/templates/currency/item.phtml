@@ -6,6 +6,8 @@
     $ticker = $this->getAttribute('ticker');
     /** @var $helper \Helpers\Data */
     $helper = $this->getAttribute('helper');
+    $totals = [];
+    $profit = 0;
 ?>
 
 <div class="container">
@@ -14,27 +16,28 @@
         <?php echo $this->fetch('messages.phtml'); ?>
         <?php if (count($txns)): ?>
             <?php $totals = $helper->getTxnsTotal($txns); ?>
-            <table class="table table-hover">
+            <table class="table">
                 <thead>
                     <tr class="info">
                         <th></th>
-                        <th>Bought</th>
-                        <th>Spent</th>
+                        <th>Amount</th>
+                        <th>Value</th>
                         <th>Price per BTC</th>
-                        <th>Created At</th>
+                        <th>Date</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($txns as $tx): ?>
-                        <tr>
-                            <?php $pricePerBtc = $helper->calculatePricePerBtc($tx['spent'], $tx['bought']); ?>
-                            <td></td>
-                            <td><?php echo $tx['bought'];?></td>
-                            <td><?php echo $helper->formatCurrency($tx['spent']);?></td>
+                        <?php $type = $tx['type'] == 1 ? "buy" : "sell"; ?>
+                        <tr class="<?php echo $type; ?>">
+                            <?php $pricePerBtc = $helper->calculatePricePerBtc($tx['value'], $tx['amount']); ?>
+                            <td><?php echo $type; ?></td>
+                            <td><?php echo $tx['amount'];?></td>
+                            <td><?php echo $helper->formatCurrency($tx['value']);?></td>
                             <td><?php echo $helper->formatCurrency($pricePerBtc); ?></td>
-                            <td><?php echo $tx['created_at'];?></td>
+                            <td><?php echo $helper->formatDate($tx['date']);?></td>
                             <td>
                                 <a href="/currency/txn/edit/<?php echo $tx['id']; ?>">Edit</a>
                             </td>
@@ -45,18 +48,17 @@
                     <?php endforeach; ?>
                         <tr class="info">
                             <td>Total</td>
-                            <td><?php echo $totals['total_bought']; ?></td>
-                            <td><?php echo $helper->formatCurrency($totals['total_spent']); ?></td>
-                            <td><?php echo $helper->formatCurrency($totals['total_price_per_btc']); ?></td>
+                            <td><?php echo $totals['total_amount']; ?></td>
+                            <td><?php echo $helper->formatCurrency($totals['total_value']); ?></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
                         </tr>
                         <tr class="info">
                             <td>Profit</td>
-                            <?php $spent = $totals['total_bought'] * $totals['total_price_per_btc']; ?>
-                            <?php $current = $totals['total_bought'] * $ticker->price; ?>
-                            <td><?php echo $helper->formatCurrency($current - $spent); ?></td>
+                            <?php $profit = $totals['total_amount'] * $ticker->price + $totals['total_value']; ?>
+                            <td><?php echo $helper->formatCurrency($profit); ?></td>
                         </tr>
                 </tbody>
             </table>
@@ -68,12 +70,23 @@
                 <form action="/currency/add/transaction" method="post" >
                     <input name="id" type="hidden" value="<?php echo $item['id']; ?>" />
                     <div class="form-group">
-                        <label for="bought">Bought</label>
-                        <input id="bought" class="form-control" name="bought" type="text" />
+                        <label for="txn_type">Type</label>
+                        <select id="txn_type" name="txn_type">
+                            <option value="1">Bought</option>
+                            <option value="2">Sold</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="spent">Spent ($)</label>
-                        <input id="spent" class="form-control" name="spent" type="text" />
+                        <label for="amount">Amount (BTC)</label>
+                        <input id="amount" class="form-control" name="amount" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="value">Value ($)</label>
+                        <input id="value" class="form-control" name="value" type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="txn_date">Date of transaction</label>
+                        <input id="txn_date" class="form-control" name="txn_date" type="text" />
                     </div>
                     <div class="form-group">
                         <button class="btn btn-default">Add</button>
@@ -85,9 +98,53 @@
                 <p class="text-center lead2"><?php echo $helper->formatCurrency($ticker->price); ?></p>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="lead">Play with values</p>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input id="ptotal" class="form-control" type="text" value="<?php echo $totals['total_amount'] ?>" />
+                </div>
+                <div class="form-group">
+                    <label>Price</label>
+                    <input id="pprice" class="form-control" type="text" value="<?php echo $ticker->price; ?>" />
+                </div>
+                <div class="form-group">
+                    <label>Value</label>
+                    <input id="pvalue" class="form-control" type="text" disabled value="" />
+                </div>
+                <div class="form-group">
+                    <button id="pupdate" class="btn btn-default">Update</button>
+                </div>
+            </div>
+        </div>
     <?php else: ?>
         <span>No items.</span>
     <?php endif; ?>
     <a href="/currency">Back</a>
 </div>
+<script>
+    $( function() {
+        $( "#txn_date" ).datepicker();
+    } );
+
+    var Prediction = function (total, price, profit) {
+        var self = this;
+        this.total = $('#' + total);
+        this.price = $('#' + price);
+        this.profit = $('#' + profit);
+        this.update = function() {
+            console.log(this.total.val());
+            var profit = parseFloat(this.total.val()) * parseFloat(this.price.val());
+            this.profit.val(profit)
+        };
+
+        $('#pupdate').on('click', function() {
+            self.update();
+        });
+
+    };
+
+    new Prediction('ptotal', 'pprice', 'pvalue');
+</script>
 <?php echo $this->fetch('footer.phtml'); ?>
